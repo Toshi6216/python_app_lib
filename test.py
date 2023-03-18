@@ -15,5 +15,5 @@ pandas.set_option('display.unicode.east_asian_width', True)
 
 df = pandas.DataFrame(list,columns=title)
 # print(df)
-print(df.to_string(index=False))
+print(df.to_string(index=False, justify='left'))
 

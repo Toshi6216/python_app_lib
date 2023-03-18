@@ -69,8 +69,8 @@ class LibraryDAO:
         t_delta = datetime.timedelta(hours=9)  # 9時間
         JST = datetime.timezone(t_delta, 'JST')  # UTCから9時間差の「JST」タイムゾーン
         today = datetime.datetime.now(JST)
-        borrowed_date= today.strftime('%Y-%m-%d')  # タイムゾーン付きでローカルな日付と時刻を取得
-        return_date =(today + datetime.timedelta(days=4)).strftime('%Y-%m-%d') #5日間の貸出期間（返却期限は4日後）
+        borrowed_date= today.strftime('%Y/%m/%d')  # タイムゾーン付きでローカルな日付と時刻を取得
+        return_date =(today + datetime.timedelta(days=4)).strftime('%Y/%m/%d') #5日間の貸出期間（返却期限は4日後）
 
         print("borrowed_date",borrowed_date)
         print("return_date",return_date)
