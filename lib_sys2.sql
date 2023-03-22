@@ -30,6 +30,7 @@ CREATE TABLE books (
   borrowed_date DATE,
   return_date DATE,
   user_id VARCHAR(255),
+  count_borrowed int not null,
   PRIMARY KEY (book_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id) 
   ON DELETE SET NULL ON UPDATE CASCADE
@@ -50,18 +51,18 @@ VALUES
   ('中村達也', '40010', 0);
 
 -- booksテーブルにダミーデータを挿入するSQL
-INSERT INTO books (book_id, book_title, is_borrowed, borrowed_date, return_date, user_id)
+INSERT INTO books (book_id, book_title, is_borrowed, borrowed_date, return_date, user_id, count_borrowed)
 VALUES
-  ('30021', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL),
-  ('30022', '人間失格', true, '2022-02-01', '2022-02-05', '40001'),
-  ('30023', '羊をめぐる冒険', false, NULL, NULL, NULL),
-  ('30024', '銀河鉄道の夜', true, '2022-03-01', '2022-03-05', '40002'),
-  ('30025', '舟を編む', false, NULL, NULL, NULL),
-  ('30026', '蜜蜂と遠雷', true, '2022-03-07', '2022-03-11', '40003'),
-  ('30027', '坊っちゃん', true, '2022-02-03', '2022-02-07', '40001'),
-  ('30028', '三毛猫ホームズの推理', false, NULL, NULL, NULL),
-  ('30029', 'ドグラ・マグラ', true, '2022-02-28', '2022-03-14', '40004'),
-  ('30030', '万引き家族', true, '2022-02-03', '2022-02-07', '40001');
+  ('30021', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL, 10),
+  ('30022', '人間失格', true, '2022-02-01', '2022-02-05', '40001', 6),
+  ('30023', '羊をめぐる冒険', false, NULL, NULL, NULL, 6),
+  ('30024', '銀河鉄道の夜', true, '2022-03-01', '2022-03-05', '40002', 4),
+  ('30025', '舟を編む', false, NULL, NULL, NULL, 0),
+  ('30026', '蜜蜂と遠雷', true, '2022-03-07', '2022-03-11', '40003', 5),
+  ('30027', '坊っちゃん', true, '2022-02-03', '2022-02-07', '40001', 8),
+  ('30028', '三毛猫ホームズの推理', false, NULL, NULL, NULL, 1),
+  ('30029', 'ドグラ・マグラ', true, '2022-02-28', '2022-03-14', '40004', 2),
+  ('30030', '万引き家族', true, '2022-02-03', '2022-02-07', '40001', 4);
   
 INSERT INTO staff (id, staff_id, s_pass)
 VALUES
