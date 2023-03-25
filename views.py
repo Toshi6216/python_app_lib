@@ -1,23 +1,17 @@
 from LibraryDao import *
 import pandas
 from UsersDao import *
-import unicodedata
+from common import *
 
-def get_east_asian_width_count(text): #文字数カウント 全角は2文字 半角は1文字としてカウント
-    count = 0
-    for c in text:
-        if unicodedata.east_asian_width(c) in 'FWA': #'F':全角英数 'W':漢字、かな文字、句読点など 'A':ギリシャ文字など 
-            count += 2
-        else:
-            count += 1
-    return count
 
 class LibraryView:
     def __init__(self):
         self.lib_dao = LibraryDao()
         self.users_dao = UsersDao()
-        self.title = ["図書ID", "タイトル", "貸出状況", "貸出日", "返却日", "利用者ID", "貸出回数" ]
-        self.users_title = ["利用者ID", "利用者名", "貸出回数" ]
+        self.title = ["図書ID", "ISBN", "タイトル", "貸出状況", "貸出日", "返却日", "利用者ID", "貸出回数" ]
+        #self.users_title = ["利用者ID", "利用者名", "貸出回数" ]
+        self.books_ranking_title = ["ランキング","ISBN", "タイトル", "貸出回数" ]
+    
 
         
     def book_cell_format_change(self, books): #図書情報の内容を表示用に変換してリストで渡す
@@ -32,15 +26,15 @@ class LibraryView:
     #************************************
         for book in books:
             book = list(book)
-            if book[2]: #is_borrowed
-                book[2]="貸出中"
-                book[3]=book[3].strftime('%Y/%m/%d')
+            if book[3]: #is_borrowed
+                book[3]="貸出中"
                 book[4]=book[4].strftime('%Y/%m/%d')
+                book[5]=book[5].strftime('%Y/%m/%d')
             else:
-                book[2]="貸出可能"
-                book[3]="-"
+                book[3]="貸出可能"
                 book[4]="-"
                 book[5]="-"
+                book[6]="-"
             book_list.append(book)
         return book_list
 
@@ -126,7 +120,7 @@ class LibraryView:
         # pandas.options.display.max_colwidth=10
         pandas.set_option('display.unicode.east_asian_width', True)
         display = pandas.DataFrame(book_list,columns=self.title)    
-        print(display.to_string(index=False, justify='left'))
+        print(display.to_string(index=False))
 
     def show_book_ranking_by_pandas(self): #pandasを使って一覧表示 >-----------------
         book_list=self.book_list_display()#図書情報を表示用に加工してリストを作成
@@ -135,29 +129,52 @@ class LibraryView:
         pandas.set_option('display.unicode.east_asian_width', True)
         display = pandas.DataFrame(book_list,columns=self.title)    
         display['rank']=display['貸出回数'].rank(ascending=False, method='min').astype('int')
-        print(display.to_string(index=False, justify='left'))
+        print(display.to_string(index=False))
 
-    def user_list_display(self): #利用者の表示用リスト作成
-        user_list = self.users_dao.get_all_user()
-        return user_list
 
-    def show_user_list_by_pandas(self): #pandasを使って一覧表示 >-----------------
-        user_list=self.user_list_display()#利用者情報を表示用に加工してリストを作成
-        
+    
+    def book_ranking_list_display(self): #bookランキングの表示用リスト作成
+        rannking_list = self.lib_dao.get_ranking_book()
+        return rannking_list
+
+    def show_book_ranking_list_by_pandas(self): #pandasを使って一覧表示 >-----------------
+        ranking_list=self.book_ranking_list_display()#bookランキング情報を表示用に加工してリストを作成
+        count=1
+        old_num=-1
+        rank=1
+        ranking_list2=[]
+        for row in ranking_list:
+
+            num=row[2]
+            print("num:",num) #
+            row2=list(row)
+            if(num<old_num):
+                rank=count
+            row2.insert(0,rank)
+            print("row2:",row2)
+            ranking_list2.append(tuple(row2))
+            old_num=num
+            count+=1
+        # ranking_num=list(range(1,1+len(ranking_list)))
         pandas.set_option('display.unicode.east_asian_width', True)
-        display = pandas.DataFrame(user_list,columns=self.users_title)    
+        # pandas.index('ranking')
+        # display = pandas.DataFrame(ranking_list,columns=self.books_ranking_title,index=ranking_num)    
+        # print(display)
+        display = pandas.DataFrame(ranking_list2,columns=self.books_ranking_title)    
         print(display.to_string(index=False))
 
     def run(self):
         while True:
             try:
-                print("1:利用者メニュー  2:図書メニュー  3:図書データCSV出力  4:図書登録・削除  5:ランキング   0:ログアウト")
+                print("1:利用者メニュー  2:図書貸出・返却  3:図書データCSV出力  4:図書登録・削除  5:ランキング   6:図書検索  0:ログアウト")
 
                 choice = int(input("Enter your choice: "))
 
                 if choice == 1: #利用者メニュー
+                    self.users_dao.show_user_list_by_pandas() #pandasを使ってuserリスト一覧表示
                     users_view=UsersView()
-                    print("1:利用者登録  2:利用者一覧  3:利用者一覧CSV出力  4:利用者削除  0:もどる")
+                    print("1:利用者登録  2:利用者一覧  3:利用者一覧CSV出力  4:利用者削除  5:利用者検索  0:もどる")
+
                     choice1 = int(input("Enter your choice: "))
 
                     if choice1 == 1: #利用者登録
@@ -166,7 +183,7 @@ class LibraryView:
 
                     elif choice1 == 2: #利用者一覧
                         # self.users_dao.user_list_display()
-                        self.show_user_list_by_pandas() #pandasを使ってuserリスト一覧表示
+                        self.users_dao.show_user_list_by_pandas() #pandasを使ってuserリスト一覧表示
 
 
                     elif choice1 == 3: #利用者一覧CSV出力
@@ -176,12 +193,14 @@ class LibraryView:
 
                         self.users_dao.user_delete_function()
 
+                    elif choice1 == 5: #利用者検索
+                        self.users_dao.search_user()
 
                     elif choice1 == 0: #もどる
                         pass
 
 
-                elif choice == 2: #図書メニュー
+                elif choice == 2: #図書貸出返却
                     
                     self.show_book_ranking_by_pandas() #pandasを使ってbookリスト一覧表示(ランキング)
                     # self.show_book_list_by_pandas() #pandasを使ってbookリスト一覧表示
@@ -197,11 +216,12 @@ class LibraryView:
                             pass
                         # book情報を各変数に保存する
                         book_id=book_row[0]
-                        book_title=book_row[1]
-                        is_borrowed=book_row[2]
-                        borrowed_date=book_row[3]
-                        return_date=book_row[4]
-                        borrow_id=book_row[5]
+                        isbn=book_row[1]
+                        book_title=book_row[2]
+                        is_borrowed=book_row[3]
+                        borrowed_date=book_row[4]
+                        return_date=book_row[5]
+                        borrow_user=book_row[6]
 
                         
                         print("1:貸出処理 2:返却処理 0:もどる")  ###
@@ -210,12 +230,13 @@ class LibraryView:
                         if choice2 == 1: #貸出処理
 
                             if is_borrowed == False: #貸出中でなければ貸出処理
-                                print(f"{book_row[0]} {book_row[1]}の貸出処理をします")
+                                print(f"{book_id} {book_title}の貸出処理をします")
 
                                 user_id = input("Enter borrow user id: ")
                                 self.borrow_book(book_id,user_id)
+                            
                             else: #貸出中の場合
-                                print(f"{book_id} {book_title}は貸出中です。")
+                                print(f"{book_id} {book_title}、図書はすでに貸出中です。")  #文言訂正 2023/03/23 石井
                                 
 
                         elif choice2 == 2:     #返却
@@ -223,8 +244,10 @@ class LibraryView:
                                 print(f"{book_id} {book_title}の返却処理をします")
                                 self.return_book(book_id)
                             else:
-                                print("貸出中ではありません")
-                                
+                                print(f"{book_title}、図書は貸出されていません。")  #文言訂正 2023/03/23 石井
+                        
+                        
+
                         elif choice2 == 0: #最初のメニューにもどる
                             pass #なにもせず図書メニューから抜ける
                     else: #入力した図書IDが存在しない場合は何もせずメニューにもどる
@@ -259,8 +282,9 @@ class LibraryView:
                     if choice1 == 1: #図書登録
                         
                         book_id=input("Enter book id: ")
+                        isbn=input("Enter book isbn: ")
                         book_title=input("Enter book title: ")
-                        self.lib_register(book_id,book_title)
+                        self.lib_register(book_id,isbn,book_title)
 
 
                     elif choice1 == 2: #図書削除
@@ -271,9 +295,11 @@ class LibraryView:
                         pass
 
                 elif choice == 5: #ランキング
-                    self.lib_dao.ranking_list()
-
+                    # self.lib_dao.ranking_list()
+                    self.show_book_ranking_list_by_pandas() #pandasを使ってbookランキングリスト一覧表示
                     
+                elif choice == 6: #図書検索
+                    self.lib_dao.search_book()
 
                 elif choice == 0:
                     print("ログアウト")
@@ -318,12 +344,13 @@ class LibraryView:
 
                 # book情報を各変数に保存する
                 book_id=book_row[0] #book_idセット
-                book_title=book_row[1] #book_titleセット
-                is_borrowed=book_row[2] #貸出状態をセット
-                # borrowed_date=book_row[3]
-                # return_date=book_row[4]
-
-                count_borrowed=book_row[6]
+                # isbn=book_row[1]
+                book_title=book_row[2] #book_titleセット
+                is_borrowed=book_row[3] #貸出状態をセット
+                # borrowed_date=book_row[4]
+                # return_date=book_row[5]
+                # borrow_user=book_row[6]
+                count_borrowed=book_row[7]
 
                 user_id=user_id #本のデータにuser_idにセット
 
@@ -341,13 +368,24 @@ class LibraryView:
                             count_books+=1
                             count_borrowed+=1
                             
-                            # 貸出処理
+                            # 貸出処理   2023.03.24 修正　石井
                             borrow_success=self.lib_dao.borrow_book_dao(book_id,user_id,count_books,count_borrowed)
                             if borrow_success:
                                 print(f"{book_title}の貸出処理をしました。")
-                                book = self.lib_dao.get_book(book_id)
-                                print(book)
+                                books = self.lib_dao.get_book(book_id)
+                                for book in books:
+                                    book = list(book)
+                                    book[5]=book[5].strftime('%Y/%m/%d')
+                                # print(book)
+                                print(f"図書ID：{book_id}\n図書タイトル：{book_title}\n利用者ID：{user_id}\n返却日：{book[5]}\n")
                                 break
+                            # # 貸出処理
+                            # borrow_success=self.lib_dao.borrow_book_dao(book_id,user_id,count_books,count_borrowed)
+                            # if borrow_success:
+                            #     print(f"{book_title}の貸出処理をしました。")
+                            #     book = self.lib_dao.get_book(book_id)
+                            #     print(book)
+                            #     break
                                 
                             else:
                                 break
@@ -382,12 +420,13 @@ class LibraryView:
             pass
         # book情報を各変数に保存する
         book_id=book_row[0]
-        book_title=book_row[1]
-        is_borrowed=book_row[2]
-        # borrowed_date=book_row[3]
-        # return_date=book_row[4]
-        borrow_id=book_row[5]
-        count_borrowed=book_row[6]
+        # isbn=book_row[1]
+        book_title=book_row[2]
+        is_borrowed=book_row[3]
+        # borrowed_date=book_row[4]
+        return_date=book_row[5]
+        borrow_id=book_row[6]
+        count_borrowed=book_row[7]
 
 
         #user情報取得
@@ -400,7 +439,7 @@ class LibraryView:
             count_books=user_row[2]
 
         
-            # print(f"図書ID：{book_id}\n図書タイトル：{book_title}\n利用者ID：{borrow_id}\n返却日：{return_date}\n")   
+            print(f"図書ID：{book_id}\n図書タイトル：{book_title}\n利用者ID：{borrow_id}\n返却日：{return_date}\n")   
             while True:
                 key=input("返却しますか。y/n：")
                 #返却確認
@@ -422,7 +461,8 @@ class LibraryView:
                 else:
                     print("正しく入力してください")
         else:
-            print("貸し出されていません。")
+            print("貸し出されていません。") #文言訂正 2023/03/23 石井
+
 
     def books_display_csv(self): #図書一覧CSV出力
         rows=self.book_list_display_for_csv()
@@ -439,7 +479,8 @@ class LibraryView:
                 s+=str(row[3])+","
                 s+=str(row[4])+","
                 s+=str(row[5])+","
-                s+=str(row[6])+"\n"
+                s+=str(row[6])+","
+                s+=str(row[7])+"\n"
                 data2.append(s)
             f.writelines(data2)
             f.flush()
@@ -461,7 +502,8 @@ class LibraryView:
                 s+=str(row[3])+","
                 s+=str(row[4])+","
                 s+=str(row[5])+","
-                s+=str(row[6])+"\n"
+                s+=str(row[6])+","
+                s+=str(row[7])+"\n"
                 data2.append(s)
             f.writelines(data2)
             f.flush()
@@ -476,9 +518,9 @@ class LibraryView:
 #           2)book_title 図書名
 #       2023.3.20 K.Ishihara
 #
-    def lib_register(self,book_id,book_title): #図書登録入力処理メイン
+    def lib_register(self,book_id,isbn,book_title): #図書登録入力処理メイン
         if(str.isdecimal(book_id)==False):
-            print("数値を入力してください。")
+            print("図書IDは数字のみです。")
             return       
 
         # 該当book情報を取得
@@ -497,7 +539,7 @@ class LibraryView:
             return
 
         # 図書登録処理
-        return_success=self.lib_dao.lib_register_dao(book_id,book_title)
+        return_success=self.lib_dao.lib_register_dao(book_id,isbn,book_title)
         if return_success:
             print(f"図書ID：{book_id}\t図書名： {book_title}を登録しました。")
         else:
@@ -521,11 +563,12 @@ class LibraryView:
             pass
         # book情報を各変数に保存する
         book_id=book_row[0]
-        book_title=book_row[1]
-        is_borrowed=book_row[2]
-        borrowed_date=book_row[3]
-        return_date=book_row[4]
-        borrow_id=book_row[5]
+        # isbn=book_row[1]
+        book_title=book_row[2]
+        is_borrowed=book_row[3]
+        borrowed_date=book_row[4]
+        return_date=book_row[5]
+        borrow_id=book_row[6]
 
         if is_borrowed!=0:
             print("貸出中の図書を削除できません。")

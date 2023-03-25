@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS books;
 
 CREATE TABLE books (
   book_id VARCHAR(255) NOT NULL,
+  isbn VARCHAR(20) NOT NULL,
   book_title VARCHAR(40) NOT NULL,
   is_borrowed BOOLEAN NOT NULL,
   borrowed_date DATE,
@@ -51,18 +52,22 @@ VALUES
   ('中村達也', '40010', 0);
 
 -- booksテーブルにダミーデータを挿入するSQL
-INSERT INTO books (book_id, book_title, is_borrowed, borrowed_date, return_date, user_id, count_borrowed)
+INSERT INTO books (book_id, isbn, book_title, is_borrowed, borrowed_date, return_date, user_id, count_borrowed)
 VALUES
-  ('30021', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL, 10),
-  ('30022', '人間失格', true, '2022-02-01', '2022-02-05', '40001', 6),
-  ('30023', '羊をめぐる冒険', false, NULL, NULL, NULL, 6),
-  ('30024', '銀河鉄道の夜', true, '2022-03-01', '2022-03-05', '40002', 4),
-  ('30025', '舟を編む', false, NULL, NULL, NULL, 0),
-  ('30026', '蜜蜂と遠雷', true, '2022-03-07', '2022-03-11', '40003', 5),
-  ('30027', '坊っちゃん', true, '2022-02-03', '2022-02-07', '40001', 8),
-  ('30028', '三毛猫ホームズの推理', false, NULL, NULL, NULL, 1),
-  ('30029', 'ドグラ・マグラ', true, '2022-02-28', '2022-03-14', '40004', 2),
-  ('30030', '万引き家族', true, '2022-02-03', '2022-02-07', '40001', 4);
+  ('30021', '9784087746637', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL, 10),
+  ('30022', '9784001155217', '人間失格', true, '2022-02-01', '2022-02-05', '40001', 6),
+  ('30023', '9784048739022', '羊をめぐる冒険', false, NULL, NULL, NULL, 6),
+  ('30024', '9784046213986', '銀河鉄道の夜', true, '2022-03-01', '2022-03-05', '40002', 4),
+  ('30025', '9784061851109', '舟を編む', false, NULL, NULL, NULL, 0),
+  ('30026', '9784167119024', '蜜蜂と遠雷', true, '2022-03-07', '2022-03-11', '40003', 5),
+  ('30027', '9784087712441', '坊っちゃん', true, '2022-02-03', '2022-02-07', '40001', 8),
+  ('30028', '9784062932558', '三毛猫ホームズの推理', false, NULL, NULL, NULL, 1),
+  ('30029', '9784101000019', 'ドグラ・マグラ', true, '2022-02-28', '2022-03-14', '40004', 2),
+  ('30030', '9784062936365', '万引き家族', true, '2022-02-03', '2022-02-07', '40001', 4),
+  ('30031', '9784087746637', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL, 8),
+  ('30032', '9784087746637', '世界の中心で、愛をさけぶ', false, NULL, NULL, NULL, 5);
+
+
   
 INSERT INTO staff (id, staff_id, s_pass)
 VALUES

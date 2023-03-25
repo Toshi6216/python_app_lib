@@ -2,8 +2,33 @@ import mysql.connector
 import datetime
 
 class Database: #データベースの基本操作
-    def __init__(self): #コネクション確立
-        print("start:__init__")
+    # def __init__(self): #コネクション確立
+    #     print("start:__init__")
+    #     try:
+    #         # self.conn = mysql.connector.connect(user='user', password='pass', database='lib_sys')
+    #         self.conn = mysql.connector.connect(host='localhost', port='3306', user='user', password='pass', database='lib_sys')
+
+    #         # print(self.conn.is_connected())
+    #         self.cursor = self.conn.cursor(prepared=True)
+    #     except (mysql.connector.errors.ProgrammingError) as e:
+    #         print(e)
+    #     print("end:__init__")
+
+
+    # -----------------------------------
+    # デストラクタ
+    #
+    # コネクションを解放する。
+    # -----------------------------------
+    # def __del__(self):
+    #     print("start:__del__")
+    #     try:
+    #         self.conn.close()
+    #     except (mysql.connector.errors.ProgrammingError) as e:
+    #         print(e)
+    #     print("end:__del__")
+
+    def database_connection(self):
         try:
             # self.conn = mysql.connector.connect(user='user', password='pass', database='lib_sys')
             self.conn = mysql.connector.connect(host='localhost', port='3306', user='user', password='pass', database='lib_sys')
@@ -14,14 +39,7 @@ class Database: #データベースの基本操作
             print(e)
         print("end:__init__")
 
-
-    # -----------------------------------
-    # デストラクタ
-    #
-    # コネクションを解放する。
-    # -----------------------------------
-    def __del__(self):
-        print("start:__del__")
+    def database_closing(self):
         try:
             self.conn.close()
         except (mysql.connector.errors.ProgrammingError) as e:
@@ -53,35 +71,62 @@ class LibraryDao:
         self.db = Database()
 
     def get_book(self, book_id):
+        self.db.database_connection()
         query = "SELECT * FROM books WHERE book_id = ?"
         result = self.db.execute_query(query, (book_id,))
+        self.db.database_closing()
         return result
     
     def get_all(self):
+        self.db.database_connection()
         query = "SELECT * FROM books "
         result = self.db.execute_query(query, data=None)
+        self.db.database_closing()
         return result
     
     def get_user_from_books(self, user_id): #図書の利用者検索用
+        self.db.database_connection()
         query = "SELECT * FROM books WHERE user_id = ?"
         result = self.db.execute_query(query, (user_id,))
+        self.db.database_closing()
         return result
     
     def get_user_from_users(self, user_id): #利用者リストでの利用者ID検索用
+        self.db.database_connection()
         query = "SELECT * FROM users WHERE user_id = ?"
         result = self.db.execute_query(query, (user_id,))
+        self.db.database_closing()
         return result
 
     def get_user_from_borrowed_books(self, is_borrowed): #図書リストでの貸出中の検索
+        self.db.database_connection()
         query = "SELECT * FROM books WHERE is_borrowed = ?"
         result = self.db.execute_query(query, (is_borrowed,))
+        self.db.database_closing()
         return result
     
     def get_user(self, user_id):
+        self.db.database_connection()
         query = "SELECT * FROM users WHERE user_id = ?"
         result = self.db.execute_query(query, (user_id,))
+        self.db.database_closing()
         return result
 
+    def get_ranking_book(self):
+        self.db.database_connection()
+        query = "SELECT isbn,book_title,sum(count_borrowed) as 貸出合計 FROM books GROUP BY isbn,book_title order by sum(count_borrowed) desc"
+        result = self.db.execute_query(query, data=None)
+        self.db.database_closing()
+        return result
+    
+    def search_book(self):
+        keyword = input("検索する図書名を入力してください:")
+        query = "SELECT * FROM books WHERE book_title LIKE ?"
+        self.db.database_connection()
+        results=self.db.execute_query(query,(f'%{keyword}%',))
+        self.db.closing()
+        for result in results:
+            print(result)
 #
 # 図書返却処理
 #   input   1)book_id  図書ID
@@ -94,6 +139,7 @@ class LibraryDao:
 #
     def return_book_dao(self, book_id,user_id,count_books):
         try:
+            self.db.database_connection()
             query = "UPDATE books SET is_borrowed=0, borrowed_date=NULL, return_date =NULL, user_id =NULL WHERE book_id = ?"
             self.db.execute_insert_query(query, (book_id,))
             print("self.db.cursor.rowcount",self.db.cursor.rowcount)
@@ -110,6 +156,8 @@ class LibraryDao:
                 raise Exception
             #更新確定　※トランザクション処理
             self.db.conn.commit()
+            # self.db.database_closing()
+            self.db.closing()
             return True
         except:
             self.db.conn.rollback() 
@@ -127,6 +175,7 @@ class LibraryDao:
         # print("return_date",return_date)
 
         try:
+            self.db.database_connection()
             query = "UPDATE books SET is_borrowed=1, borrowed_date=?, return_date =?, user_id =?, count_borrowed =? WHERE book_id = ?"
             data=(borrowed_date, return_date, user_id, count_borrowed, book_id)
             self.db.execute_insert_query(query, data)
@@ -142,6 +191,9 @@ class LibraryDao:
 
             #更新確定　※トランザクション処理
             self.db.conn.commit()
+            # self.db.database_closing()
+            self.db.closing()
+
             return True
         
         except:
@@ -150,9 +202,11 @@ class LibraryDao:
             return False
 
     def get_staff(self, data):
+        self.db.database_connection()
         # query = "SELECT * FROM staff WHERE staff_id = ? and s_pass = ?".format(staff_id, s_pass)
         query = "SELECT * FROM staff WHERE staff_id = ? and s_pass = ?"
         result = self.db.execute_query(query,data)
+        self.db.closing()
         
         return result
 
@@ -164,16 +218,19 @@ class LibraryDao:
 #           2)book_title 図書名
 #       2023.3.20 K.Ishihara
 #
-    def lib_register_dao(self, book_id,book_title):
+    def lib_register_dao(self, book_id,isbn,book_title):
         try:
-            query = "insert into books values(?,?,0,NULL,NULL,NULL,0)"
-            self.db.execute_insert_query(query, (book_id,book_title))
+            self.db.database_connection()
+            query = "insert into books values(?,?,?,0,NULL,NULL,NULL,0)"
+            self.db.execute_insert_query(query, (book_id,isbn,book_title))
 
             if self.db.cursor.rowcount == 0:
                 raise Exception
 
             #更新確定　※トランザクション処理
             self.db.conn.commit()
+            self.db.closing()
+
             return True
         except:
             self.db.conn.rollback() 
@@ -188,14 +245,16 @@ class LibraryDao:
 #
     def lib_delete_dao(self, book_id):
         try:
+            self.db.database_connection()
             query = "delete from books where book_id =?"
             self.db.execute_insert_query(query, (book_id,))
-
             if self.db.cursor.rowcount == 0:
                 raise Exception
 
             #更新確定　※トランザクション処理
             self.db.conn.commit()
+            self.db.closing()
+
             return True
         except:
             self.db.conn.rollback() 
@@ -203,11 +262,11 @@ class LibraryDao:
             return False
         
     #ランキング用データ作成    
-    def ranking_list(self):
-        books=self.get_all()
+    #def ranking_list(self):
+        #books=self.get_all()
         # print(books)
-        books_dict={}
-        for book in books:
-            books_dict[book[0]]=book[6]
+        #books_dict={}
+        #for book in books:
+            #books_dict[book[0]]=book[6]
         # print(books_dict)
         
