@@ -167,7 +167,6 @@ class LibraryDao:
 #   output  1)book_id  図書ID
 #           2)user_id   利用者ID
 #           3)count_books 貸出数
-#       2023.3.15 K.Ishihara
 #
     def return_book_dao(self, book_id,user_id,count_books):
         try:
@@ -246,7 +245,6 @@ class LibraryDao:
 #           3)book_kana 図書名（かな）
 #   output  1)book_id  図書ID
 #           2)book_title 図書名
-#       2023.3.20 K.Ishihara
 #
     def lib_register_dao(self, book_id,isbn,book_title,book_kana): ###
         try:
@@ -271,7 +269,6 @@ class LibraryDao:
 # 図書削除処理
 #   input   1)book_id  図書ID
 #   output  1)book_id  図書ID
-#       2023.3.20 K.Ishihara
 #
     def lib_delete_dao(self, book_id):
         try:

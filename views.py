@@ -313,7 +313,6 @@ class LibraryView:
 #   output  1)book_id  図書ID
 #           2)user_id   利用者ID
 #           3)count_books 貸出数
-#       2023.3.16 T.Hotta
 #
     def borrow_book(self,book_id,user_id): #貸出処理メイン
         # 該当book情報を取得
@@ -399,7 +398,6 @@ class LibraryView:
 #   output  1)book_id  図書ID
 #           2)user_id   利用者ID
 #           3)count_books 貸出数
-#       2023.3.15 K.Ishihara
 #
     def return_book(self,book_id): #返却処理メイン
         # 該当book情報を取得
@@ -508,7 +506,6 @@ class LibraryView:
 #           2)book_title 図書名
 #   output  1)book_id  図書ID
 #           2)book_title 図書名
-#       2023.3.20 K.Ishihara
 #
     def lib_register(self,book_id,isbn,book_title,book_kana): #図書登録入力処理メイン
         if(str.isdecimal(book_id)==False):
@@ -544,7 +541,6 @@ class LibraryView:
 # 図書削除確認処理
 #   input   1)book_id  図書ID
 #   output  1)book_id  図書ID
-#       2023.3.20 K.Ishihara
 #
     def lib_delete(self,book_id): #図書削除確認処理メイン
 
